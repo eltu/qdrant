@@ -481,7 +481,7 @@ impl Segment {
 
         // Flush entire segment if needed
         if !internal_ids_to_delete.is_empty() {
-            self.flusher(true).map(|flusher| flusher()).transpose()?;
+            self.flush(true)?;
         }
         Ok(())
     }
