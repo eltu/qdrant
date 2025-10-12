@@ -1,7 +1,6 @@
 use std::cmp::max;
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
-use std::thread::JoinHandle;
 
 use bitvec::prelude::BitVec;
 use common::counter::hardware_counter::HardwareCounterCell;
@@ -437,34 +436,6 @@ impl Segment {
         })
     }
 
-    // Joins flush thread if exists
-    // Returns lock to guarantee that there will be no other flush in a different thread
-    pub(super) fn lock_flushing(
-        &self,
-    ) -> OperationResult<
-        parking_lot::MutexGuard<'_, Option<JoinHandle<OperationResult<SeqNumberType>>>>,
-    > {
-        let mut lock = self.flush_thread.lock();
-        let mut join_handle: Option<JoinHandle<OperationResult<SeqNumberType>>> = None;
-        std::mem::swap(&mut join_handle, &mut lock);
-        if let Some(join_handle) = join_handle {
-            // Flush result was reported to segment, so we don't need this value anymore
-            let _background_flush_result = join_handle
-                .join()
-                .map_err(|_err| OperationError::service_error("failed to join flush thread"))??;
-        }
-        Ok(lock)
-    }
-
-    pub(super) fn is_background_flushing(&self) -> bool {
-        let lock = self.flush_thread.lock();
-        if let Some(join_handle) = lock.as_ref() {
-            !join_handle.is_finished()
-        } else {
-            false
-        }
-    }
-
     /// Check consistency of the segment's data and repair it if possible.
     /// Removes partially persisted points.
     pub fn check_consistency_and_repair(&mut self) -> OperationResult<()> {
@@ -510,7 +481,7 @@ impl Segment {
 
         // Flush entire segment if needed
         if !internal_ids_to_delete.is_empty() {
-            self.flush(true, true)?;
+            self.flusher(true).map(|flusher| flusher()).transpose()?;
         }
         Ok(())
     }
