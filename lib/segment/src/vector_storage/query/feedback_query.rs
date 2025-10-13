@@ -47,7 +47,7 @@ impl<T> FeedbackPair<T> {
 
 /// Trained coefficients for the formula. Specific to a triplet of dataset-smallmodel-bigmodel.
 #[derive(Debug, Clone, PartialEq, Serialize, Hash)]
-pub struct LinearFeedbackStrategy {
+pub struct SimpleFeedbackStrategy {
     /// Trained coefficient `a`
     pub a: OrderedFloat<f32>,
     /// Trained coefficient `b`
@@ -109,7 +109,7 @@ impl<T, U, TStrategy> TransformInto<FeedbackQuery<U, TStrategy>, T, U>
     }
 }
 
-impl LinearFeedbackStrategy {
+impl SimpleFeedbackStrategy {
     #[inline]
     fn pair_score(&self, confidence: f32, delta: f32) -> f32 {
         let Self {
@@ -122,7 +122,7 @@ impl LinearFeedbackStrategy {
     }
 }
 
-impl<T> Query<T> for FeedbackQuery<T, LinearFeedbackStrategy> {
+impl<T> Query<T> for FeedbackQuery<T, SimpleFeedbackStrategy> {
     /// This follows the following formula:
     /// $ a * score + \sum{confidence_pair ^b * c * delta_pair} $
     fn score_by(&self, similarity: impl Fn(&T) -> ScoreType) -> ScoreType {

@@ -18,7 +18,7 @@ use crate::common::operation_error::{OperationError, OperationResult};
 use crate::common::utils::transpose_map_into_named_vector;
 use crate::types::{VectorName, VectorNameBuf};
 use crate::vector_storage::query::{
-    ContextQuery, DiscoveryQuery, FeedbackQuery, LinearFeedbackStrategy, RecoQuery, TransformInto,
+    ContextQuery, DiscoveryQuery, FeedbackQuery, RecoQuery, SimpleFeedbackStrategy, TransformInto,
 };
 
 /// How many dimensions of a sparse vector are considered to be a single unit for cost estimation.
@@ -823,7 +823,7 @@ pub enum QueryVector {
     RecommendSumScores(RecoQuery<VectorInternal>),
     Discovery(DiscoveryQuery<VectorInternal>),
     Context(ContextQuery<VectorInternal>),
-    FeedbackLinear(FeedbackQuery<VectorInternal, LinearFeedbackStrategy>),
+    FeedbackLinear(FeedbackQuery<VectorInternal, SimpleFeedbackStrategy>),
 }
 
 impl TransformInto<QueryVector, VectorInternal, VectorInternal> for QueryVector {

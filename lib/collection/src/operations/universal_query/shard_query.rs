@@ -15,7 +15,7 @@ use segment::types::{
     WithVector,
 };
 use segment::vector_storage::query::{
-    ContextQuery, DiscoveryQuery, FeedbackPair, FeedbackQuery, LinearFeedbackStrategy, RecoQuery,
+    ContextQuery, DiscoveryQuery, FeedbackPair, FeedbackQuery, RecoQuery, SimpleFeedbackStrategy,
 };
 use serde::Serialize;
 use shard::query::query_enum::QueryEnum;
@@ -375,14 +375,14 @@ fn query_enum_from_grpc_raw_query(
                 .ok_or_else(|| Status::invalid_argument("No strategy provided"))?;
 
             match strategy {
-                grpc::feedback_strategy::Variant::Linear(linear_feedback_strategy) => {
+                grpc::feedback_strategy::Variant::Simple(linear_feedback_strategy) => {
                     let query = FeedbackQuery {
                         target,
                         feedback_pairs,
-                        strategy: LinearFeedbackStrategy::from(linear_feedback_strategy),
+                        strategy: SimpleFeedbackStrategy::from(linear_feedback_strategy),
                     };
 
-                    QueryEnum::FeedbackLinear(NamedQuery { query, using })
+                    QueryEnum::FeedbackSimple(NamedQuery { query, using })
                 }
             }
         }
@@ -718,7 +718,7 @@ fn query_enum_into_grpc_raw_query(query: QueryEnum) -> grpc::RawQuery {
             Variant::Discover(grpc::raw_query::Discovery::from(named.query))
         }
         QueryEnum::Context(named) => Variant::Context(grpc::raw_query::Context::from(named.query)),
-        QueryEnum::FeedbackLinear(named) => {
+        QueryEnum::FeedbackSimple(named) => {
             Variant::Feedback(grpc::raw_query::Feedback::from(named.query))
         }
     };
