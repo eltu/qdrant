@@ -168,7 +168,7 @@ pub enum VectorQuery<T> {
     RecommendSumScores(RecoQuery<T>),
     Discover(DiscoveryQuery<T>),
     Context(ContextQuery<T>),
-    Feedback(FeedbackQuery<T>),
+    Feedback(FeedbackInternal<T>),
 }
 
 impl<T> VectorQuery<T> {
@@ -200,13 +200,13 @@ pub struct Mmr {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct FeedbackQuery<T> {
+pub struct FeedbackInternal<T> {
     pub target: T,
     pub feedback: Vec<ScoredItem<T>>,
     pub strategy: FeedbackStrategy,
 }
 
-impl<T> FeedbackQuery<T> {
+impl<T> FeedbackInternal<T> {
     fn flat_iter(&self) -> impl Iterator<Item = &T> {
         self.feedback
             .iter()
@@ -339,7 +339,7 @@ impl VectorQuery<VectorInputInternal> {
 
                 Ok(VectorQuery::NearestWithMmr(NearestWithMmr { nearest, mmr }))
             }
-            VectorQuery::Feedback(FeedbackQuery {
+            VectorQuery::Feedback(FeedbackInternal {
                 target,
                 feedback,
                 strategy,
@@ -360,7 +360,7 @@ impl VectorQuery<VectorInputInternal> {
                     })
                     .collect::<CollectionResult<_>>()?;
 
-                Ok(VectorQuery::Feedback(FeedbackQuery {
+                Ok(VectorQuery::Feedback(FeedbackInternal {
                     target,
                     feedback,
                     strategy,
@@ -440,7 +440,7 @@ impl VectorQuery<VectorInternal> {
             VectorQuery::NearestWithMmr(NearestWithMmr { nearest, mmr: _ }) => {
                 nearest.preprocess();
             }
-            VectorQuery::Feedback(FeedbackQuery {
+            VectorQuery::Feedback(FeedbackInternal {
                 target,
                 feedback,
                 strategy: _,
@@ -492,7 +492,7 @@ impl VectorQuery<VectorInternal> {
                     candidates_limit: candidates_limit.unwrap_or(request_limit),
                 }));
             }
-            VectorQuery::Feedback(FeedbackQuery {
+            VectorQuery::Feedback(FeedbackInternal {
                 target,
                 feedback,
                 strategy,
